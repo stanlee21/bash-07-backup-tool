@@ -28,7 +28,7 @@ die() {
     shift
 
     echo "Error: $*" >&2
-    exit 1
+    exit "$status"
 }
 
 # $* is all the arguments joined into one string
@@ -37,6 +37,7 @@ log() {
         echo "[$(date +%H:%M:%S)] $*"
     fi
 }
+
 # ---- main logic -------------------------------------------------
 main() {
 
