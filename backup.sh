@@ -23,6 +23,10 @@ EOF
 
 
 die() {
+
+    local status="$1"
+    shift
+
     echo "Error: $*" >&2
     exit 1
 }
@@ -35,7 +39,7 @@ log() {
 }
 # ---- main logic -------------------------------------------------
 main() {
-    
+
     local opt
     local SOURCE
 
@@ -56,13 +60,35 @@ main() {
                 exit 0
                 ;;
             :)
-                die "Option -$OPTARG requires an argument"
+                die 2 "Option -$OPTARG requires an argument"
                 ;;
             \?)
-                die "Unknown option: -$OPTARG"
+                die 2 "Unknown option: -$OPTARG"
                 ;;
         esac
     done
+
+    # Remove processed options
+    shift "$((OPTIND - 1))"
+
+    # Get the remaining source argument
+    SOURCE="${1:-}"
+
+    # Validate the source argument
+    if [[ -z "$SOURCE" ]]; then
+        die 2 "Source directory is required"
+    fi
+
+    # Check that the source exists and is a directory
+    if [[ ! -d "$SOURCE" ]]; then
+        die 2 "Source is not a valid directory: $SOURCE"
+    fi
+
+    # Validate KEEP: it must be a positive whole number
+    if [[ ! "$KEEP" =~ ^[1-9][0-9]*$ ]]; then
+        die 2 "KEEP must be a positive whole number"
+    fi
+
 
     # Remove processed options from the argument list
     shift "$((OPTIND - 1))"
