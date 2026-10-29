@@ -38,6 +38,70 @@ log() {
     fi
 }
 
+#create_backup with date and tar
+create_backup() {
+    local SOURCE="$1"
+    local DEST="$2"
+    local folder_name
+    local timestamp
+    local archive
+
+    # Get the source folder's name
+    folder_name="$(basename "$SOURCE")"
+
+    # Create the destination folder if it doesn't exist
+    mkdir -p "$DEST" || die 1 "Could not create destination: $DEST"
+
+    timestamp="$(date +%Y%m%d-%H%M%S)"
+    archive="$DEST/$folder_name-$timestamp.tar.gz"
+
+    # Prevent overwriting an existing archive
+    local suffix=1
+    while [[ -e "$archive" ]]; do
+        archive="$DEST/$folder_name-$timestamp($suffix).tar.gz"
+        suffix=$((suffix + 1))
+    done
+
+    # Create the compressed backup
+    if tar -czf "$archive" -C "$(dirname "$SOURCE")" "$folder_name"; then
+        log "Backup created: $archive"
+        printf 'Backup successful: %s\n' "$archive"
+    else
+        rm -f "$archive"
+        die 1 "Backup failed for: $SOURCE"
+    fi
+}
+
+
+rotate_backups() {
+    local SOURCE="$1"
+    local DEST="$2"
+    local KEEP="$3"
+    local folder_name
+    local count=0
+    local archive
+
+    folder_name="$(basename "$SOURCE")"
+
+    while IFS= read -r archive; do
+        count=$((count + 1))
+
+        if (( count > KEEP )); then
+            rm -f -- "$archive" ||
+                die 1 "Could not remove: $archive"
+
+            log "Removed old backup: $archive"
+        fi
+    done < <(
+        find "$DEST" -maxdepth 1 -type f \
+            -name "$folder_name-*.tar.gz" \
+            -printf '%f\n' |
+        sort -r |
+        sed "s|^|$DEST/|"
+    )
+}
+
+
 # ---- main logic -------------------------------------------------
 main() {
 
@@ -90,18 +154,15 @@ main() {
         die 2 "KEEP must be a positive whole number"
     fi
 
+    # Resolve the source to an absolute path
+    SOURCE="$(cd "$SOURCE" && pwd -P)" ||
+        die 2 "Could not resolve source directory"
 
-    # Remove processed options from the argument list
-    shift "$((OPTIND - 1))"
+    # Create the backup
+    create_backup "$SOURCE" "$DEST"
 
-    # The remaining positional argument is the source
-    SOURCE="${1:-}"
-
-    # Temporary output for testing Slice 2
-    printf 'SOURCE: %s\n' "$SOURCE"
-    printf 'DEST: %s\n' "$DEST"
-    printf 'KEEP: %s\n' "$KEEP"
-    printf 'VERBOSE: %s\n' "$VERBOSE"
+    # Remove older backups
+    rotate_backups "$SOURCE" "$DEST" "$KEEP"
 
 }
 main "$@"
