@@ -35,7 +35,46 @@ log() {
 }
 # ---- main logic -------------------------------------------------
 main() {
-    # ...parse options, validate, do the work...
-    : # ':' is a command that does nothing; it keeps the empty function valid
+    
+    local opt
+    local SOURCE
+
+    # Process command-line options
+    while getopts ":d:k:vh" opt; do
+        case "$opt" in
+            d)
+                DEST="$OPTARG"
+                ;;
+            k)
+                KEEP="$OPTARG"
+                ;;
+            v)
+                VERBOSE=true
+                ;;
+            h)
+                usage
+                exit 0
+                ;;
+            :)
+                die "Option -$OPTARG requires an argument"
+                ;;
+            \?)
+                die "Unknown option: -$OPTARG"
+                ;;
+        esac
+    done
+
+    # Remove processed options from the argument list
+    shift "$((OPTIND - 1))"
+
+    # The remaining positional argument is the source
+    SOURCE="${1:-}"
+
+    # Temporary output for testing Slice 2
+    printf 'SOURCE: %s\n' "$SOURCE"
+    printf 'DEST: %s\n' "$DEST"
+    printf 'KEEP: %s\n' "$KEEP"
+    printf 'VERBOSE: %s\n' "$VERBOSE"
+
 }
 main "$@"
