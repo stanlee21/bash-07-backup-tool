@@ -2,6 +2,7 @@
 #
 # backup.sh - create timestamped backups of a folder
 # Usage: backup.sh [-d DEST] [-k KEEP] [-v] SOURCE
+# Author: Tata Stanley Mbajing
 
 # ---- settings ---------------------------------------------------
 DEST="$HOME/backups"
