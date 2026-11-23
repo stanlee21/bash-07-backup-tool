@@ -2,8 +2,7 @@
 #
 # backup.sh - create timestamped backups of a folder
 # Usage: backup.sh [-d DEST] [-k KEEP] [-v] SOURCE
-# Author: Ama Nkeng, Rebase Code Camp
-#
+
 # ---- settings ---------------------------------------------------
 DEST="$HOME/backups"
 KEEP=5
@@ -73,6 +72,7 @@ create_backup() {
 }
 
 
+
 rotate_backups() {
     local SOURCE="$1"
     local DEST="$2"
@@ -94,7 +94,7 @@ rotate_backups() {
         fi
     done < <(
         find "$DEST" -maxdepth 1 -type f \
-            -name "$folder_name-*.tar.gz" \
+            -name "${folder_name}-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9].tar.gz" \
             -printf '%f\n' |
         sort -r |
         sed "s|^|$DEST/|"
