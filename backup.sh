@@ -55,11 +55,9 @@ create_backup() {
     archive="$DEST/$folder_name-$timestamp.tar.gz"
 
     # Prevent overwriting an existing archive
-    local suffix=1
-    while [[ -e "$archive" ]]; do
-        archive="$DEST/$folder_name-$timestamp($suffix).tar.gz"
-        suffix=$((suffix + 1))
-    done
+    if [[ -e "$archive" ]]; then
+        die 1 "A backup with this timestamp already exists: $archive"
+    fi
 
     # Create the compressed backup
     if tar -czf "$archive" -C "$(dirname "$SOURCE")" "$folder_name"; then
